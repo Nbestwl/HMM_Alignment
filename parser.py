@@ -5,6 +5,19 @@
 
 from math import exp
 
+def read_fasta(filename):
+	with open(filename) as fp:
+		name, seq = None, []
+		for line in fp:
+			line = line.rstrip()
+			if line.startswith(">"):
+				if name: return name, ''.join(seq)
+				name, seq = line, []
+			else:
+				seq.append(line)
+		if name: return name, ''.join(seq)
+
+
 def parser(filename):
 	index = 0
 	table, match_emissions, insert_emissions, state_transitions, avg = [], [], [], [], []
@@ -16,56 +29,51 @@ def parser(filename):
 				index = i
 
 		for line in l[index:]:
-			table. append(line)
+			table.append(line)
 
 	obs = table[0].split()[1:]
 	transitions = table[1].split()
 
 	table = table[2:]
 	for x in table[0:3]:
- 		avg.append(x.split())
- 	table = table[3:-1]
+		avg.append(table[0].split())
+	table = table[3:-1]
 
- 	for x in range(len(table)/3):
- 		match_emissions.append(table[x*3].split()[1:len(avg[1])+1])
- 		insert_emissions.append(table[x*3+1].split())
- 		state_transitions.append(table[x*3+2].split())
+	for x in range(len(table)/3):
+		match_emissions.append(table[x*3].split()[1:len(avg[1])+1])
+		insert_emissions.append(table[x*3+1].split())
+		state_transitions.append(table[x*3+2].split())
 
- 	return match_emissions, insert_emissions, state_transitions, avg, obs
+	return match_emissions, insert_emissions, state_transitions, avg[0][1:], obs
 
 
 def convertProb(num):
-    return exp(-float(num)) if num != '*' else 0
+	return exp(-float(num)) if num != '*' else 0
 
 
 def parse_trans(transitions):
 	trans_p = []
-
 	for transition in transitions:
 		trans, match, insert, delete = {}, {}, {}, {}
-        match = {
-            'Match': convertProb(transition[0]),
-            'Insert': convertProb(transition[1]),
-            'Delete': convertProb(transition[2]),
-        }
-
-        insert = {
-            'Match': convertProb(transition[3]),
-            'Insert': convertProb(transition[4]),
-        }
-
-        delete = {
-            'Match': convertProb(transition[5]),
-            'Delete': convertProb(transition[6]),
-        }
-
-        trans = {
-            'Match': match,
-            'Insert': insert,
-            'Delete': delete
-        }
-
-        trans_p.append(trans)
+		match = {
+			'Match': convertProb(transition[0]),
+			'Insert': convertProb(transition[1]),
+			'Delete': convertProb(transition[2])
+		}
+		insert = {
+			'Match': convertProb(transition[3]),
+			'Insert': convertProb(transition[4])
+		}
+		delete = {
+			'Match': convertProb(transition[5]),
+			'Delete': convertProb(transition[6])
+		}
+		trans = {
+			'Match': match,
+			'Insert': insert,
+			'Delete': delete
+		}
+		trans_p.append(trans)
 
 	return trans_p
 
